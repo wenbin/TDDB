@@ -62,11 +62,20 @@ public class HostProxyImpl implements HostProxy {
 			throws Exception {
 		Environment en = findOrCreateEnvironment(session);
 		
+		en.thread = new Thread() {
+			public void run()
+			{
+				/**
+				 * 
+				 * Process Query Here
+				 *  
+				 **/
+			}
+		};
 		en.thread.start();
 		en.thread.join();
 		Thread.sleep(3000);
 		destroyEnvironment(session);
-		
 		return String.format("[%d]Query: %s", session.sessionId, queryStr);
 	}
 	

@@ -23,6 +23,18 @@ import com.sun.org.apache.bcel.internal.Constants;
 
 public class HostServer
 {
+	public static void startService(ServiceConfig config)
+	{
+		try {
+			Registry r = LocateRegistry.getRegistry();
+			HostService service = new HostServiceImpl();
+			r.rebind(config.getLocalBindUrl(), service);
+			System.out.println(config.getRemoteBindUrl() + ": is Ready!");
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} 
+	}
+	
 	public static void main(String[] args) 
 	{
 		if(System.getSecurityManager() == null)
@@ -30,15 +42,16 @@ public class HostServer
 	       System.setSecurityManager(new RMISecurityManager());
 	    }
 		
-		try {
-			Registry r = LocateRegistry.getRegistry();
-			HostService service = new HostServiceImpl();
-			ServiceConfig config = new ServiceConfig("localhost", 0, HostService.SERVICE_NAME);
-			r.rebind(config.getLocalBindUrl(), service);
-			System.out.println(HostService.SERVICE_NAME + ": is Ready!");
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
+		ServiceConfig[] configs = new ServiceConfig[]
+        {
+			new ServiceConfig ("localhost", 0, HostService.SERVICE_NAME),
+			new ServiceConfig ("localhost", 1, HostService.SERVICE_NAME),
+			new ServiceConfig ("localhost", 2, HostService.SERVICE_NAME),
+			new ServiceConfig ("localhost", 3, HostService.SERVICE_NAME),
+        };
+		
+		for (ServiceConfig c : configs) {
+			startService(c);
+		}
 	}
 }

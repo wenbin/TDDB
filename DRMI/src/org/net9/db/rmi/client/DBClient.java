@@ -8,6 +8,8 @@ import org.net9.db.rmi.HostService;
 import org.net9.db.rmi.ServiceConfig;
 import org.net9.db.rmi.HostSession;
 
+import com.sun.security.auth.login.ConfigFile;
+
 
 public class DBClient {
 	
@@ -33,17 +35,19 @@ public class DBClient {
 	    {
 	       System.setSecurityManager(new RMISecurityManager());
 	    }
-		ServiceConfig config = new ServiceConfig("localhost", 0, HostService.SERVICE_NAME);
+		
+		ServiceConfig[] configs = new ServiceConfig[] { 
+			new ServiceConfig("localhost", 0, HostService.SERVICE_NAME),
+			new ServiceConfig("localhost", 1, HostService.SERVICE_NAME),
+			new ServiceConfig("localhost", 2, HostService.SERVICE_NAME),
+			new ServiceConfig("localhost", 3, HostService.SERVICE_NAME)
+		};
+		ServiceConfig config = configs[0];
 		
 		try {
-			Remote r = Naming.lookup(config.getRemoteBindUrl());
-			Class<? extends Remote> c = r.getClass();
-			System.out.println("Found remote: " + c.getName());
-			HostService service = (HostService)r;
-			
+			HostService service = DBClientManager.getHostService(config);
 			testEcho(service);
 			testQuery(service);
-			
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -67,6 +67,7 @@ public class TestHostProxy extends TestCase {
 					
 					String queryStr = "Select * from demo";
 					String str = impl.query(session, queryStr);
+					
 					assertEquals(str, String.format("[%d]Query: %s", session.sessionId, queryStr));
 				} catch (Exception e) {
 					exception = e;

@@ -3,21 +3,21 @@ package org.net9.db.rmi;
 public class ServiceConfig
 {
 	private String host;
-	private int sessionId;
+	private int port;
 	private String serviceName;
 	
-	public ServiceConfig(String host, int sessionId, String serviceName)
+	public ServiceConfig(String host, int port, String serviceName)
 	{
 		this.host = host;
-		this.sessionId = sessionId;
+		this.port = port;
 		this.serviceName = serviceName;
 	}
 	
 	public String getLocalBindUrl()
 	{
-		return String.format("(host_%s)(session_%d)%s",
+		return String.format("(host_%s)(port_%d)%s",
 				host,
-				sessionId,
+				port,
 				serviceName);
 	}
 	
