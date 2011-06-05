@@ -27,7 +27,7 @@ public class HostServiceImpl extends UnicastRemoteObject implements HostService
 		requestCount++;
 		HostProxy proxy = HostProxyFactory.getInstance();
 		try {
-			HostSession ret = proxy.requestSession();
+			HostSession ret = proxy.openSession();
 			return ret;
 		} catch (Exception e) {
 			e.printStackTrace();

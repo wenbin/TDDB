@@ -8,13 +8,17 @@ public class HostSession implements Serializable
 {
 	public int sessionId;
 	public int hostName;
-	public Date timestamp;
+	public Date startTime;
+	public Date expiredTime;
+	public String owner;
 	
 	public boolean equals(HostSession h)
 	{
 		if (sessionId != h.sessionId
 			|| hostName != h.hostName 
-			|| timestamp != h.timestamp ) {
+			|| startTime != h.startTime 
+			|| expiredTime != h.expiredTime
+			|| owner != h.owner) {
 			return false;
 		}
 		return false;

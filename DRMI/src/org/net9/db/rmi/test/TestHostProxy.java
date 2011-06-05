@@ -47,7 +47,7 @@ public class TestHostProxy extends TestCase {
 				long id = Thread.currentThread().getId();
 				System.out.println("id:" + id + " is running");
 				try {
-					HostSession session = impl.requestSession();
+					HostSession session = impl.openSession();
 					assertFalse(impl.containsEnvironment(session));
 					
 					impl.findEnvironment(session, false);
@@ -67,8 +67,9 @@ public class TestHostProxy extends TestCase {
 					
 					String queryStr = "Select * from demo";
 					String str = impl.query(session, queryStr);
-					
 					assertEquals(str, String.format("[%d]Query: %s", session.sessionId, queryStr));
+					
+					impl.closeSession(session);
 				} catch (Exception e) {
 					exception = e;
 					e.printStackTrace();

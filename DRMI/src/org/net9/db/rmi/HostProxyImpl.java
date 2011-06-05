@@ -1,5 +1,6 @@
 package org.net9.db.rmi;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -7,7 +8,6 @@ import java.util.Map;
 import java.util.Random;
 
 public class HostProxyImpl implements HostProxy {
-		
 	protected static Map<HostSession, Environment> sessionPool
 		= Collections.synchronizedMap(new HashMap<HostSession, Environment>());
 	protected static Object sessionPoolMutex = new Object();
@@ -41,7 +41,7 @@ public class HostProxyImpl implements HostProxy {
 	public void destroyEnvironment(HostSession session)
 	{
 		synchronized (sessionPoolMutex) {
-			if ( sessionPool.containsKey(session) ) {
+			if (sessionPool.containsKey(session)) {
 				Environment enviroment = sessionPool.get(session);
 				enviroment.destroy();
 				sessionPool.remove(session);
@@ -49,12 +49,22 @@ public class HostProxyImpl implements HostProxy {
 		}
 	}
 	
+	/////////////////////////////////////////////////
+	// interfaces:
 	@Override
-	public HostSession requestSession() throws Exception {
+	public HostSession openSession() throws Exception {
 		HostSession session = new HostSession();
 		session.sessionId = new Random().nextInt();
-		session.timestamp = new Date();
+		session.startTime = new Date();
+		// TODO: set later -- TT
+		session.expiredTime = null; 
+		session.owner = "";
 		return session;
+	}
+	
+	@Override
+	public void closeSession(HostSession session) throws Exception {
+		destroyEnvironment(session);
 	}
 	
 	@Override
@@ -62,9 +72,17 @@ public class HostProxyImpl implements HostProxy {
 			throws Exception {
 		Environment en = findOrCreateEnvironment(session);
 		
-		en.thread = new Thread() {
+		Thread thread = new Thread() {
 			public void run()
 			{
+				// TODO: set query processor. --TT
+				
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				
 				/**
 				 * 
 				 * Process Query Here
@@ -72,11 +90,11 @@ public class HostProxyImpl implements HostProxy {
 				 **/
 			}
 		};
-		en.thread.start();
-		en.thread.join();
-		Thread.sleep(3000);
-		destroyEnvironment(session);
+		
+		en.addThread(thread);
+		thread.start();
+		thread.join();
+		
 		return String.format("[%d]Query: %s", session.sessionId, queryStr);
-	}
-	
+	}	
 }
