@@ -1,0 +1,48 @@
+define site site1 127.0.0.1:40001
+define site site2 127.0.0.1:40002
+define site site3 127.0.0.1:40003
+define site site4 127.0.0.1:40004
+
+create table Publisher id int key , name string , nation string
+create table Book id int key , title string , authors string , publisher_id int , copies int
+create table Orders customer_id int , book_id int , quantity int
+create table Customer id int key , name string , rank int
+
+fragment Publisher horizontally into id<104000 and nation='PRC' , id<104000 and nation='USA' , id>=104000 and nation='PRC' , id>=104000 and nation='USA'
+fragment Book horizontally into id<205000 , id>=205000 and id<210000 , id>=210000
+fragment Orders horizontally into customer_id<307000 and book_id<215000 , customer_id<307000 and book_id>=215000 , customer_id>=307000 and book_id<215000 , customer_id>=307000 and book_id>=215000
+fragment Customer vertically into id name , id rank      
+
+allocate Publisher$1 to site1
+allocate Publisher$2 to site2
+allocate Publisher$3 to site3
+allocate Publisher$4 to site4
+
+allocate Book$1 to site1
+allocate Book$2 to site2
+allocate Book$3 to site3
+
+allocate Orders$1 to site1
+allocate Orders$2 to site2
+allocate Orders$3 to site3
+allocate Orders$4 to site4
+
+allocate Customer$1 to site1
+allocate Customer$2 to site2
+
+
+select Customer.name ,Orders.quantity,Book.title from Customer,Orders,Book where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Customer.rank=1 and Book.copies>5000
+
+select Customer.name ,Orders.quantity,Book.title,Publisher.name from Customer,Orders,Book,Publisher where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Publisher.id=Book.publisher_id and Customer.rank=1 and Book.copies>5000 and Publisher.nation='USA'
+
+select * from Customer
+
+select Book.title  from Book  where copies > 5000
+
+select customer_id, quantity  from Orders  where quantity < 8
+
+select Book.title,Book.copies, Publisher.name, Publisher.nation from Book,Publisher where Book.publisher_id=Publisher.id and Publisher.nation='USA' and Book.copies > 1000
+
+select Customer.name,Orders.quantity from Customer,Orders where Customer.id=Orders.customer_id
+
+
