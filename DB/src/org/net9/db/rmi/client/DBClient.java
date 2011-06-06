@@ -57,8 +57,8 @@ public class DBClient {
 				BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 				String newLine = stdin.readLine();
 				while (!newLine.equals("exit")) {
-					newLine = stdin.readLine();
 					testQuery(service, newLine);
+					newLine = stdin.readLine();
 				}
 			} catch (Exception e) {
 				System.out.println(e);
