@@ -2,6 +2,9 @@
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -20,15 +23,9 @@ public class HostProxyImpl implements HostProxy {
 	protected static Object sessionPoolMutex = new Object();
 	
 	protected QueryProcess queryProcess = new QueryProcess();
-	// <siteName, ServiceConfig>
-	//protected HashMap<String, ServiceConfig> services = new HashMap<String, ServiceConfig>();
-	// <siteName, SiteType>
-	//protected HashMap<String, SiteType> sites = new HashMap<String, SiteType>();
-	
+
 	public void initializeConfig()
 	{
-		//HashMap<String, ServiceConfig> services, 
-		//HashMap<String, SiteType> sites
 		queryProcess.initialDB();
 	}
 	
@@ -85,9 +82,10 @@ public class HostProxyImpl implements HostProxy {
 	@Override
 	public void closeSession(HostSession session) throws Exception {
 		destroyEnvironment(session);
+		// TODO: fix notifyAll
 	}
 	
-	private HostProxyImpl findService(HostSession session, TreeNode node)
+	private HostService findService(HostSession session, TreeNode node) throws MalformedURLException, RemoteException, NotBoundException
 	{
 		Environment en = findOrCreateEnvironment(session);
 
@@ -97,7 +95,8 @@ public class HostProxyImpl implements HostProxy {
 		ServiceConfig serviceConfig = (ServiceConfig)serviceInfo.get(siteName);
 		// TODO:
 		// DBClientManager getHostService
-		return this;
+		HostService service = DBClientManager.getHostService(serviceConfig);
+		return service;
 	}
 	
 	public ArrayList<HashMap> runTreeNode(HostSession session, Object node)
@@ -111,16 +110,56 @@ public class HostProxyImpl implements HostProxy {
 		ArrayList<HashMap> rans = null;
 		final TreeNode lson = treeNode.getLson();
 		final TreeNode rson = treeNode.getRson();
+		
+		class WorkerThread extends Thread 
+		{
+			public ArrayList<HashMap> ans;
+			public HostService proxy;
+			public HostSession session;
+			public TreeNode son;
+			public Exception exception;
+			
+			public void run()
+			{
+				try {
+					ans = proxy.runTreeNode(session, son);
+				} catch (Exception e) {
+					this.exception = e;
+					e.printStackTrace();
+				}
+			}
+		}
+		WorkerThread lThread = new WorkerThread();
+		WorkerThread rThread = new WorkerThread();
 		if (lson != null) {
-			HostProxyImpl leftService = findService(session, lson); //: TODO
-			lans = leftService.runTreeNode(session, lson);
+			HostService leftService = findService(session, lson); //: TODO
+			lThread.proxy = leftService;
+			lThread.session = session;
+			lThread.son = lson;
+			lThread.run();
 		}
 		if (rson != null) {
-			HostProxyImpl rightService = findService(session, rson); //: TODO
-			rans = rightService.runTreeNode(session, rson);
+			HostService rightService = findService(session, lson); //: TODO
+			rThread.proxy = rightService;
+			rThread.session = session;
+			rThread.son = rson;
+			rThread.run();
 		}
-		ArrayList<HashMap> ans = treeNode.runAns(lans, rans);
 		
+		en.addThread(lThread);
+		en.addThread(rThread);
+		lThread.start();
+		rThread.start();
+		lThread.join();
+		rThread.join();
+		if (lThread.exception != null || rThread.exception != null)
+		{
+			// TODO: Error Remote
+		}
+		
+		lans = lThread.ans;
+		rans = lThread.ans;
+		ArrayList<HashMap> ans = treeNode.runAns(lans, rans);
 		return ans;
 	}
 	
@@ -158,9 +197,10 @@ public class HostProxyImpl implements HostProxy {
 	public void main(String[] argv) throws Exception
 	{
 		HostProxyImpl impl = new HostProxyImpl();
+		impl.initializeConfig();
+		
 		HostSession session = impl.openSession();
 		QueryProcess queryProcess = impl.queryProcess;
-		queryProcess.initialDB();
 		try {
 			BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 			String newLine = stdin.readLine();
