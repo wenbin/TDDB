@@ -18,13 +18,16 @@ public class TreeNode implements Serializable {
 	
 	private static SiteType localSite = null;
 	private SiteType siteType = null;
-	private TreeNode lson = null, rson = null;
+	
+
+	private TreeNode lson = null;
+	private TreeNode rson = null;
 	private int kind = -1; //opeartion kind
 	private HashSet<String> tableName = new HashSet<String>(); // tablenames
 	private ArrayList<CompareOperation> condition = new ArrayList<CompareOperation>();
 	private HashSet<String> selectItem = new HashSet<String>(); //tablename.tableitem
 	private HashSet<String> vTableItem = new HashSet<String>();
-	private ArrayList<HashMap> ans = null;
+	
 	
 	TreeNode(int kind) {
 		this.kind = kind;
@@ -33,6 +36,18 @@ public class TreeNode implements Serializable {
 		selectItem.clear();
 		vTableItem.clear();
 	}
+	
+	public SiteType getSiteType() {
+		return siteType;
+	}
+	public TreeNode getLson() {
+		return lson;
+	}
+
+	public TreeNode getRson() {
+		return rson;
+	}
+
 	
 	public void setSiteType(SiteType siteType) {
 		this.siteType = siteType;
@@ -118,194 +133,159 @@ public class TreeNode implements Serializable {
 			this.vTableItem.add(newTableItem);
 		}
 	}
-	
-	public ArrayList<HashMap> run() {
-		ArrayList<HashMap> lans = null;
-		ArrayList<HashMap> rans = null;
-		if (this.lson != null) {
-			lans = this.lson.run();
-		}
-		if (this.rson != null) {
-			rans = this.rson.run();
-		}
+	public ArrayList<HashMap> runAns(
+			ArrayList<HashMap> lans,
+			ArrayList<HashMap> rans)
+	{
+		ArrayList<HashMap> ans = null;
 		//if (siteType.getSiteName().equals(localSite.getSiteName())) {
-			switch (kind) {
-				case READ_H_DATA :
-					ans = new ArrayList<HashMap>();
-					try {
-						Class.forName("org.gjt.mm.mysql.Driver");  
-						String url = "jdbc:mysql://";
-						url = url + siteType.getAddress();
-						url = url + "/ddb" + siteType.getSiteName().charAt(4);
-						String query = getHQuery();
-						if (query != null) {
-							String username = "root";
-							String password = "root";
-							Connection conn = DriverManager.getConnection(url, username, password);
-							Statement stmt = conn.createStatement();						
-							ResultSet rs = stmt.executeQuery(query);
-							while (rs.next()) {
-								HashMap newItem = new HashMap();
-								Iterator it = selectItem.iterator();
-								while (it.hasNext()) {
-									String tableItem = (String)it.next();
+		switch (kind) {
+			case READ_H_DATA :
+				ans = new ArrayList<HashMap>();
+				try {
+					Class.forName("org.gjt.mm.mysql.Driver");  
+					String url = "jdbc:mysql://";
+					url = url + siteType.getAddress();
+					url = url + "/ddb" + siteType.getSiteName().charAt(4);
+					String query = getHQuery();
+					if (query != null) {
+						String username = "root";
+						String password = "root";
+						Connection conn = DriverManager.getConnection(url, username, password);
+						Statement stmt = conn.createStatement();						
+						ResultSet rs = stmt.executeQuery(query);
+						while (rs.next()) {
+							HashMap newItem = new HashMap();
+							Iterator it = selectItem.iterator();
+							while (it.hasNext()) {
+								String tableItem = (String)it.next();
+								String fields[] = tableItem.split("\\.");
+								String value = rs.getString(fields[1]);
+								newItem.put(tableItem, value);
+							}
+							if (newItem.size() > 0) {
+								ans.add(newItem);
+							}
+						}
+					}
+				} catch (Exception e) {
+					System.out.println(e);
+				} finally {
+					//to do
+				}	
+				break;
+			case READ_V_DATA :
+				ans = new ArrayList<HashMap>();
+				try {
+					Class.forName("org.gjt.mm.mysql.Driver");  
+					String url = "jdbc:mysql://";
+					url = url + siteType.getAddress();
+					url = url + "/ddb" + siteType.getSiteName().charAt(4);
+					String query = getVQuery();
+					
+					if (query != null) {
+						String username = "root";
+						String password = "root";
+						Connection conn = DriverManager.getConnection(url, username, password);
+						Statement stmt = conn.createStatement();						
+						ResultSet rs = stmt.executeQuery(query);
+						int tot = 0;
+						while (rs.next()) {
+							HashMap newItem = new HashMap();
+							Iterator it = selectItem.iterator();
+							while (it.hasNext()) {
+								String tableItem = (String)it.next();
+								if (vTableItem.contains(tableItem)) {
 									String fields[] = tableItem.split("\\.");
 									String value = rs.getString(fields[1]);
 									newItem.put(tableItem, value);
 								}
-								if (newItem.size() > 0) {
-									ans.add(newItem);
-								}
 							}
-						}
-					} catch (Exception e) {
-						System.out.println(e);
-					} finally {
-						//to do
-					}	
-					break;
-				case READ_V_DATA :
-					ans = new ArrayList<HashMap>();
-					try {
-						Class.forName("org.gjt.mm.mysql.Driver");  
-						String url = "jdbc:mysql://";
-						url = url + siteType.getAddress();
-						url = url + "/ddb" + siteType.getSiteName().charAt(4);
-						String query = getVQuery();
-						
-						if (query != null) {
-							String username = "root";
-							String password = "root";
-							Connection conn = DriverManager.getConnection(url, username, password);
-							Statement stmt = conn.createStatement();						
-							ResultSet rs = stmt.executeQuery(query);
-							int tot = 0;
-							while (rs.next()) {
-								HashMap newItem = new HashMap();
-								Iterator it = selectItem.iterator();
-								while (it.hasNext()) {
-									String tableItem = (String)it.next();
-									if (vTableItem.contains(tableItem)) {
-										String fields[] = tableItem.split("\\.");
-										String value = rs.getString(fields[1]);
-										newItem.put(tableItem, value);
-									}
-								}
-								if (newItem.size() > 0) {
-									ans.add(newItem);
-								}
-							}
-						}
-					} catch (Exception e) {
-						System.out.println(e);
-					} finally {
-						//to do
-					}
-					break;
-				case MERGE_H_FRAG_TABLE :
-					ans = new ArrayList<HashMap>();
-					for (int i=0; i<lans.size(); i++) {
-						ans.add(lans.get(i));
-					}
-					for (int i=0; i<rans.size(); i++) {
-						ans.add(rans.get(i));
-					}
-					break;
-				case MERGE_V_FRAG_TABLE :
-					ans = new ArrayList<HashMap>();
-					for (int i=0; i<lans.size(); i++) {
-						HashMap newItem = new HashMap();
-						HashMap lmap = (HashMap)lans.get(i);
-						Iterator lit = lmap.entrySet().iterator();
-						while (lit.hasNext()) {
-							Map.Entry lentry = (Map.Entry)lit.next();
-							String item = (String)lentry.getKey();
-							String value = (String)lentry.getValue();
-							newItem.put(item, value);
-						}
-						HashMap rmap = (HashMap)rans.get(i);
-						Iterator rit = rmap.entrySet().iterator();
-						while (rit.hasNext()) {
-							Map.Entry rentry = (Map.Entry)rit.next();
-							String item = (String)rentry.getKey();
-							String value = (String)rentry.getValue();
-							newItem.put(item, value);
-						}
-						if (condition.size() > 0) {
-							boolean satisfy = true;
-							Iterator it = condition.iterator();
-							while (it.hasNext()) {
-								CompareOperation cop = (CompareOperation)it.next();
-								String itemName = cop.getLeft();
-								String cvalue = cop.getRight();
-								String op = cop.getOP();
-								String value = (String)newItem.get(itemName);
-								if (cvalue.charAt(0) == '\'') {
-									cvalue = cvalue.substring(1, cvalue.length() - 1);
-									int cmp = cvalue.compareTo(value);
-									if (op.equals("<") && cmp >= 0 ||
-										op.equals("=") && cmp != 0 ||
-										op.equals(">") && cmp <= 0) {
-										satisfy = false; break;
-									}
-								} else {
-									int icvalue = Integer.valueOf(cvalue);
-									int ivalue = Integer.valueOf(value);
-									int cmp = icvalue - ivalue;
-									if (op.equals("<") && cmp >= 0 ||
-										op.equals("=") && cmp != 0 ||
-										op.equals(">") && cmp <= 0) {
-										satisfy = false; break;
-									}
-								}
-							}
-							if (satisfy) ans.add(newItem);
-						} else ans.add(newItem);
-					}
-					break;
-				case MERGE_DIFF_TABLE :
-					if (condition.size() == 1) {
-						CompareOperation cop = (CompareOperation)condition.get(0);
-						String leftItem = cop.getLeft(), rightItem = cop.getRight();
-						qsort(lans, 0, lans.size() - 1, leftItem);
-						qsort(rans, 0, rans.size() - 1, rightItem);
-						ans = new ArrayList<HashMap>();
-						int lindex = 0, rindex = 0;
-						while (lindex < lans.size() && rindex < rans.size()) {
-							String lvalue = (String)((HashMap)lans.get(lindex)).get(leftItem);
-							String rvalue = (String)((HashMap)rans.get(rindex)).get(rightItem);
-							int cmp = lvalue.compareTo(rvalue);
-							if (cmp == 0) {
-								HashMap newItem = new HashMap();
-								HashMap lmap = (HashMap)lans.get(lindex);
-								Iterator lit = lmap.entrySet().iterator();
-								while (lit.hasNext()) {
-									Map.Entry lentry = (Map.Entry)lit.next();
-									String item = (String)lentry.getKey();
-									String value = (String)lentry.getValue();
-									if (selectItem.contains(item)) newItem.put(item, value);
-								}
-								HashMap rmap = (HashMap)rans.get(rindex);
-								Iterator rit = rmap.entrySet().iterator();
-								while (rit.hasNext()) {
-									Map.Entry rentry = (Map.Entry)rit.next();
-									String item = (String)rentry.getKey();
-									String value = (String)rentry.getValue();
-									if (selectItem.contains(item)) newItem.put(item, value);
-								}	
+							if (newItem.size() > 0) {
 								ans.add(newItem);
-								lindex++; rindex++;
-							} else 
-							if (cmp < 0) lindex++; else rindex++;
+							}
 						}
-					} else {
-						// to do
 					}
-					break;
-				case MERGE_DECARE_TABLE :
+				} catch (Exception e) {
+					System.out.println(e);
+				} finally {
+					//to do
+				}
+				break;
+			case MERGE_H_FRAG_TABLE :
+				ans = new ArrayList<HashMap>();
+				for (int i=0; i<lans.size(); i++) {
+					ans.add(lans.get(i));
+				}
+				for (int i=0; i<rans.size(); i++) {
+					ans.add(rans.get(i));
+				}
+				break;
+			case MERGE_V_FRAG_TABLE :
+				ans = new ArrayList<HashMap>();
+				for (int i=0; i<lans.size(); i++) {
+					HashMap newItem = new HashMap();
+					HashMap lmap = (HashMap)lans.get(i);
+					Iterator lit = lmap.entrySet().iterator();
+					while (lit.hasNext()) {
+						Map.Entry lentry = (Map.Entry)lit.next();
+						String item = (String)lentry.getKey();
+						String value = (String)lentry.getValue();
+						newItem.put(item, value);
+					}
+					HashMap rmap = (HashMap)rans.get(i);
+					Iterator rit = rmap.entrySet().iterator();
+					while (rit.hasNext()) {
+						Map.Entry rentry = (Map.Entry)rit.next();
+						String item = (String)rentry.getKey();
+						String value = (String)rentry.getValue();
+						newItem.put(item, value);
+					}
+					if (condition.size() > 0) {
+						boolean satisfy = true;
+						Iterator it = condition.iterator();
+						while (it.hasNext()) {
+							CompareOperation cop = (CompareOperation)it.next();
+							String itemName = cop.getLeft();
+							String cvalue = cop.getRight();
+							String op = cop.getOP();
+							String value = (String)newItem.get(itemName);
+							if (cvalue.charAt(0) == '\'') {
+								cvalue = cvalue.substring(1, cvalue.length() - 1);
+								int cmp = cvalue.compareTo(value);
+								if (op.equals("<") && cmp >= 0 ||
+									op.equals("=") && cmp != 0 ||
+									op.equals(">") && cmp <= 0) {
+									satisfy = false; break;
+								}
+							} else {
+								int icvalue = Integer.valueOf(cvalue);
+								int ivalue = Integer.valueOf(value);
+								int cmp = icvalue - ivalue;
+								if (op.equals("<") && cmp >= 0 ||
+									op.equals("=") && cmp != 0 ||
+									op.equals(">") && cmp <= 0) {
+									satisfy = false; break;
+								}
+							}
+						}
+						if (satisfy) ans.add(newItem);
+					} else ans.add(newItem);
+				}
+				break;
+			case MERGE_DIFF_TABLE :
+				if (condition.size() == 1) {
+					CompareOperation cop = (CompareOperation)condition.get(0);
+					String leftItem = cop.getLeft(), rightItem = cop.getRight();
+					qsort(lans, 0, lans.size() - 1, leftItem);
+					qsort(rans, 0, rans.size() - 1, rightItem);
 					ans = new ArrayList<HashMap>();
-					for (int lindex=0; lindex<lans.size(); lindex++) 
-						for (int rindex=0; rindex<rans.size(); rindex++) {
+					int lindex = 0, rindex = 0;
+					while (lindex < lans.size() && rindex < rans.size()) {
+						String lvalue = (String)((HashMap)lans.get(lindex)).get(leftItem);
+						String rvalue = (String)((HashMap)rans.get(rindex)).get(rightItem);
+						int cmp = lvalue.compareTo(rvalue);
+						if (cmp == 0) {
 							HashMap newItem = new HashMap();
 							HashMap lmap = (HashMap)lans.get(lindex);
 							Iterator lit = lmap.entrySet().iterator();
@@ -322,19 +302,62 @@ public class TreeNode implements Serializable {
 								String item = (String)rentry.getKey();
 								String value = (String)rentry.getValue();
 								if (selectItem.contains(item)) newItem.put(item, value);
-							}
+							}	
 							ans.add(newItem);
+							lindex++; rindex++;
+						} else 
+						if (cmp < 0) lindex++; else rindex++;
+					}
+				} else {
+					// to do
+				}
+				break;
+			case MERGE_DECARE_TABLE :
+				ans = new ArrayList<HashMap>();
+				for (int lindex=0; lindex<lans.size(); lindex++) 
+					for (int rindex=0; rindex<rans.size(); rindex++) {
+						HashMap newItem = new HashMap();
+						HashMap lmap = (HashMap)lans.get(lindex);
+						Iterator lit = lmap.entrySet().iterator();
+						while (lit.hasNext()) {
+							Map.Entry lentry = (Map.Entry)lit.next();
+							String item = (String)lentry.getKey();
+							String value = (String)lentry.getValue();
+							if (selectItem.contains(item)) newItem.put(item, value);
 						}
-				case TRANS_RESULT :
-					ans = lans; 
-					break;
-				default :
-					break;
-			}
-		//} else {
-			//to do
-		//}
-		return this.ans;
+						HashMap rmap = (HashMap)rans.get(rindex);
+						Iterator rit = rmap.entrySet().iterator();
+						while (rit.hasNext()) {
+							Map.Entry rentry = (Map.Entry)rit.next();
+							String item = (String)rentry.getKey();
+							String value = (String)rentry.getValue();
+							if (selectItem.contains(item)) newItem.put(item, value);
+						}
+						ans.add(newItem);
+					}
+			case TRANS_RESULT :
+				ans = lans; 
+				break;
+			default :
+				break;
+		}
+	//} else {
+		//to do
+	//}
+		return ans;
+	}
+	
+	public ArrayList<HashMap> run() {
+		ArrayList<HashMap> lans = null;
+		ArrayList<HashMap> rans = null;
+		if (this.lson != null) {
+			lans = this.lson.run();
+		}
+		if (this.rson != null) {
+			rans = this.rson.run();
+		}
+		ArrayList<HashMap> ans = runAns(lans, rans);
+		return ans;
 	}
 	
 	private String getHQuery() {

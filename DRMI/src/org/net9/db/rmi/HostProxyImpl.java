@@ -1,5 +1,6 @@
 package org.net9.db.rmi;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
@@ -96,5 +97,12 @@ public class HostProxyImpl implements HostProxy {
 		thread.join();
 		
 		return String.format("[%d]Query: %s", session.sessionId, queryStr);
+	}
+
+	@Override
+	public ArrayList<HashMap> runTreeNode(HostSession session, Object node)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
 	}	
 }

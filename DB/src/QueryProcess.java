@@ -2,6 +2,9 @@ import java.io.*;
 import java.util.*;
 import java.io.Serializable;
 
+import org.net9.db.rmi.HostService;
+import org.net9.db.rmi.ServiceConfig;
+
 public class QueryProcess implements Serializable {
 	final String fileName = "benchmark.txt";
 	private SiteType localSite = null; // to do !!!!!!!!!!!!!!!!!
@@ -9,6 +12,12 @@ public class QueryProcess implements Serializable {
 	private HashMap tableTypeInfo = new HashMap(); // <talbeName, tableType>
 	private HashMap fragmentInfo = new HashMap(); // <tableName, fragmentType>
 	private HashMap siteInfo = new HashMap(); // <siteName, siteType>
+	private HashMap serviceInfo = new HashMap(); // <siteName, ServiceConfig>
+	
+	public HashMap getServiceInfo() {
+		return serviceInfo;
+	}
+
 	private String deleteMoreBlank(String st) {
 		String[] items = st.split(" ");
 		String temp = "";
@@ -19,7 +28,11 @@ public class QueryProcess implements Serializable {
 		return temp;
 	}
 	
-	private void initialDB()
+	public HashMap getSiteInfo() {
+		return siteInfo;
+	}
+	
+	public void initialDB()
 	{
 		try {
 			FileReader fr = new FileReader(fileName);
@@ -29,12 +42,21 @@ public class QueryProcess implements Serializable {
 				newLine = deleteMoreBlank(newLine);
 				String[] items = newLine.split(" ");
 				if (items[0].equals("define")) {
-					String siteName = items[2];
-					String siteAddress = items[3];
-					SiteType siteType = new SiteType(siteName, siteAddress);
-					siteInfo.put(siteName, siteType);
-					if (localSite == null) {
-						if (siteAddress.startsWith("127.0.0.1")) localSite = siteType; 
+					if (items[1].equals("site")) {
+						String siteName = items[2];
+						String siteAddress = items[3];
+						SiteType siteType = new SiteType(siteName, siteAddress);
+						siteInfo.put(siteName, siteType);
+						if (localSite == null) {
+							if (siteAddress.startsWith("127.0.0.1")) localSite = siteType; 
+						}
+					} else if (items[1].equals("service")) {
+						String siteName = items[2];
+						String[] strs = items[3].split(":");
+						String addr = strs[0];
+						int port = Integer.parseInt(strs[1]);
+						ServiceConfig service = new ServiceConfig(siteName, addr, port, HostService.SERVICE_NAME);
+						serviceInfo.put(siteName, service);
 					}
 				} else
 				if (items[0].equals("create")) {
@@ -132,7 +154,9 @@ public class QueryProcess implements Serializable {
 		System.out.println("Input Error!\n");
 	}
 	
-	private void queryParse(String newLine) {
+	public TreeNode queryParse(String newLine) {
+		final TreeNode commoandError = null;
+		
 		//get the items of the command, separated by blank and comma
 		ArrayList<String> items = new ArrayList<String>();
 		int index = 0;
@@ -144,7 +168,7 @@ public class QueryProcess implements Serializable {
 						index++;
 						while (index < newLine.length() && newLine.charAt(index) != '\'') index++;
 						if (index >= newLine.length()) {
-							printInputError(); return;
+							printInputError(); return commoandError;
 						}
 					}
 					index++;
@@ -158,25 +182,25 @@ public class QueryProcess implements Serializable {
 		for (int i=0; i<items.size(); i++) {
 			if (items.get(i).equals("select")) {
 				if (selectIndex > -1) {
-					printInputError(); return;
+					printInputError(); return commoandError;
 				}
 				selectIndex = i;
 			}
 			if (items.get(i).equals("from")) {
 				if (selectIndex == -1 || fromIndex > -1) {
-					printInputError(); return;
+					printInputError(); return commoandError;
 				}
 				fromIndex = i;
 			}
 			if (items.get(i).equals("where")) {
 				if (selectIndex == -1 || fromIndex == -1 || whereIndex > -1) {
-					printInputError(); return;
+					printInputError(); return commoandError;
 				}
 				whereIndex = i;
 			}
 		}		
 		if (selectIndex != 0 || fromIndex < 0) {
-			printInputError(); return;
+			printInputError(); return commoandError;
 		}
 		//get the item amount of select, from and where
 		int selectNum = fromIndex - selectIndex - 1, fromNum = 0, whereNum = 0;
@@ -196,7 +220,7 @@ public class QueryProcess implements Serializable {
 			String fromItem = items.get(fromIndex + i);
 			TableType table = (TableType)tableTypeInfo.get(fromItem);
 			if (table == null) {
-				printInputError(); return;
+				printInputError(); return commoandError;
 			}
 			if (selectMap.get(fromItem) == null) {
 				SelectType selectTable = new SelectType(fromItem);
@@ -223,14 +247,14 @@ public class QueryProcess implements Serializable {
 					case 1 :
 						{
 							if (selectMap.size() != 1) {
-								printInputError(); return;
+								printInputError(); return commoandError;
 							}
 							Map.Entry entry = (Map.Entry)selectMap.entrySet().iterator().next();
 							String tableName = (String)entry.getKey();
 							SelectType selectTable = (SelectType)entry.getValue();
 							TableType table = (TableType)tableTypeInfo.get(tableName);
 							if (!table.selectItem(selectItem, selectTable)) {
-								printInputError(); return;
+								printInputError(); return commoandError;
 							} else {
 								selectSet.add(tableName + "." + selectItem);
 							}
@@ -242,17 +266,17 @@ public class QueryProcess implements Serializable {
 							SelectType selectTable = (SelectType)selectMap.get(tableName);
 							String itemName = fields[1];
 							if (selectTable == null) {
-								printInputError(); return;
+								printInputError(); return commoandError;
 							}
 							TableType table = (TableType)tableTypeInfo.get(tableName);
 							if (!table.selectItem(itemName, selectTable)) {
-								printInputError(); return;
+								printInputError(); return commoandError; 
 							} else {
 								selectSet.add(tableName + "." + itemName);
 							}
 						}
 						break;
-					default : printInputError(); return;
+					default : printInputError(); return commoandError;
 				}
  			}
 		}
@@ -282,7 +306,7 @@ public class QueryProcess implements Serializable {
 				} while (i < items.size() && item.charAt(endIndex) != '>' && 
 						 item.charAt(endIndex) != '<' && item.charAt(endIndex) != '=');
 				if (i >= items.size()) {
-					printInputError(); return;
+					printInputError(); return commoandError;
 				} else leftItem = item.substring(startIndex, endIndex);
 				//op
 				op = item.substring(endIndex, endIndex + 1);
@@ -292,7 +316,7 @@ public class QueryProcess implements Serializable {
 				} else {
 					i++;
 					if (i >= items.size()) {
-						printInputError(); return;
+						printInputError(); return commoandError;
 					} else {
 						item = item + items.get(i);
 						rightItem = item.substring(endIndex, item.length());					
@@ -302,7 +326,7 @@ public class QueryProcess implements Serializable {
 					i++; 
 					item = items.get(i);
 					if (!item.toLowerCase().equals("and")) {
-						printInputError(); return;
+						printInputError(); return commoandError;
 					}
 				}
 				//leftItem
@@ -311,13 +335,13 @@ public class QueryProcess implements Serializable {
 					case 1:
 						{
 							if (selectMap.size() != 1) {
-								printInputError(); return;
+								printInputError(); return commoandError;
 							}
 							Map.Entry entry = (Map.Entry)selectMap.entrySet().iterator().next();
 							String tableName = (String)entry.getKey();
 							TableType table = (TableType)tableTypeInfo.get(tableName);
 							if (!table.hasItem(leftItem)) {
-								printInputError(); return;
+								printInputError(); return commoandError;
 							} else leftItem = tableName + "." + leftItem;
 						}
 						break;
@@ -327,27 +351,27 @@ public class QueryProcess implements Serializable {
 							SelectType selectTable = (SelectType)selectMap.get(tableName);
 							String itemName = fields[1];
 							if (selectTable == null) {
-								printInputError(); return;
+								printInputError(); return commoandError;
 							}
 							TableType table = (TableType)tableTypeInfo.get(tableName);
 							if (!table.hasItem(itemName)) {
-								printInputError(); return;
+								printInputError(); return commoandError;
 							}
 						}
 						break;						
 					default :
-						printInputError(); return;
+						printInputError(); return commoandError;
 				}
 				//right item
 				if (rightItem.charAt(0) == '\'') {
 					if (rightItem.length() < 2 || rightItem.charAt(rightItem.length()-1) != '\'') {
-						printInputError(); return;
+						printInputError(); return commoandError;
 					}
 					String lfields[] = leftItem.split("\\.");
 					TableType table = (TableType)tableTypeInfo.get(lfields[0]);
 					String ltype = table.getTypeName(lfields[1]);
 					if (!ltype.equals("string")) {
-						printInputError(); return;
+						printInputError(); return commoandError;
 					}
 					CompareOperation cOP = new CompareOperation(leftItem, op, rightItem, true);
 					DBNode dbNode = (DBNode)DBNodeMap.get(lfields[0]);
@@ -359,13 +383,13 @@ public class QueryProcess implements Serializable {
 					} catch (Exception e) {
 						System.out.println(e);
 						printInputError(); 
-						return;
+						return commoandError;
 					}
 					String lfields[] = leftItem.split("\\.");
 					TableType table = (TableType)tableTypeInfo.get(lfields[0]);
 					String ltype = table.getTypeName(lfields[1]);
 					if (!ltype.equals("int")) {
-						printInputError(); return;
+						printInputError(); return commoandError;
 					}
 					CompareOperation cOP = new CompareOperation(leftItem, op, rightItem, true);
 					DBNode dbNode = (DBNode)DBNodeMap.get(lfields[0]);
@@ -377,13 +401,13 @@ public class QueryProcess implements Serializable {
 						case 1:
 							{
 								if (selectMap.size() != 1) {
-									printInputError(); return;
+									printInputError(); return commoandError;
 								}
 								Map.Entry entry = (Map.Entry)selectMap.entrySet().iterator().next();
 								String tableName = (String)entry.getKey();
 								TableType table = (TableType)tableTypeInfo.get(tableName);
 								if (!table.hasItem(leftItem)) {
-									printInputError(); return;
+									printInputError(); return commoandError;
 								} else leftItem = tableName + "." + leftItem;
 							}
 							break;
@@ -393,16 +417,16 @@ public class QueryProcess implements Serializable {
 								SelectType selectTable = (SelectType)selectMap.get(tableName);
 								String itemName = rfields[1];
 								if (selectTable == null) {
-									printInputError(); return;
+									printInputError(); return commoandError;
 								}
 								TableType table = (TableType)tableTypeInfo.get(tableName);
 								if (!table.hasItem(itemName)) {
-									printInputError(); return;
+									printInputError(); return commoandError;
 								}
 							}
 							break;						
 						default :
-							printInputError(); return;		
+							printInputError(); return commoandError;		
 					}
 					rfields = rightItem.split("\\.");
 					TableType table = (TableType)tableTypeInfo.get(lfields[0]);
@@ -410,7 +434,7 @@ public class QueryProcess implements Serializable {
 					table = (TableType)tableTypeInfo.get(rfields[0]);
 					String rtype = table.getTypeName(rfields[1]);
 					if (!ltype.equals(rtype)) {
-						printInputError(); return;
+						printInputError(); return commoandError;
 					}
 					CompareOperation cOP = new CompareOperation(leftItem, op, rightItem, false);
 					whereOP.add(cOP);
@@ -546,6 +570,12 @@ public class QueryProcess implements Serializable {
 		
 		rootNode.setSelectItem(selectSet);
 		rootNode.setLocalSite(localSite);
+		
+		return rootNode;
+	}
+	
+	public ArrayList<HashMap> run(TreeNode rootNode)
+	{
 		ArrayList<HashMap> ans = rootNode.run();
 		
 		/*for (int i=0; i<ans.size(); i++) {
@@ -560,6 +590,8 @@ public class QueryProcess implements Serializable {
 			System.out.println();
 		}*/
 		System.out.println(ans.size());
+		
+		return ans;
 	}
 	
 	public void updateTableTopNode(HashMap tableTopNode, TreeNode newNode, TreeNode lson, TreeNode rson) {
@@ -584,7 +616,11 @@ public class QueryProcess implements Serializable {
 			BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 			String newLine = stdin.readLine();
 			while (!newLine.equals("exit")) {
-				queryParse(newLine);
+				
+				TreeNode rootNode = queryParse(newLine);
+				if (rootNode != null) {
+					run(rootNode);
+				}
 				newLine = stdin.readLine();
 			}
 		} catch (Exception e) {
@@ -595,5 +631,6 @@ public class QueryProcess implements Serializable {
 	public static void main(String argc[]) {
 		QueryProcess run = new QueryProcess();
 		run.getQuery();
+		
 	}
 }

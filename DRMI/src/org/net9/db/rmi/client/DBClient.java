@@ -37,10 +37,10 @@ public class DBClient {
 	    }
 		
 		ServiceConfig[] configs = new ServiceConfig[] { 
-			new ServiceConfig("localhost", 0, HostService.SERVICE_NAME),
-			new ServiceConfig("localhost", 1, HostService.SERVICE_NAME),
-			new ServiceConfig("localhost", 2, HostService.SERVICE_NAME),
-			new ServiceConfig("localhost", 3, HostService.SERVICE_NAME)
+			new ServiceConfig("site1", "localhost", 0, HostService.SERVICE_NAME),
+			new ServiceConfig("site2", "localhost", 1, HostService.SERVICE_NAME),
+			new ServiceConfig("site3", "localhost", 2, HostService.SERVICE_NAME),
+			new ServiceConfig("site4", "localhost", 3, HostService.SERVICE_NAME)
 		};
 		ServiceConfig config = configs[0];
 		

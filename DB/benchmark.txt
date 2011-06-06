@@ -3,6 +3,11 @@ define site site2 127.0.0.1:3306
 define site site3 127.0.0.1:3306
 define site site4 127.0.0.1:3306
 
+define service site1 127.0.0.1:1
+define service site1 127.0.0.1:2
+define service site1 127.0.0.1:3
+define service site1 127.0.0.1:4
+
 create table Publisher id int key , name string , nation string
 create table Book id int key , title string , authors string , publisher_id int , copies int
 create table Orders customer_id int , book_id int , quantity int
