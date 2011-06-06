@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.io.Serializable;
 
 public class QueryProcess implements Serializable {
 	final String fileName = "benchmark.txt";
@@ -446,19 +447,19 @@ public class QueryProcess implements Serializable {
 						mergeNode.setSiteType(localSite);
 						mergeNode.addTableName(tableName);
 						mergeNode.setSon(topNode, newNode);
-						tableTopNode.put(tableName, newNode);
+						tableTopNode.put(tableName, mergeNode);
 					}
 				}
 			} else {
 				ArrayList fItems = ftype.getFragmentItems();
 				HashMap fSite = ftype.getFragmentSite();
 				for (int i=0; i<fItems.size(); i++) {
-					TreeNode newNode = new TreeNode(TreeNode.READ_V_DATA);					
+					TreeNode newNode = new TreeNode(TreeNode.READ_V_DATA);		
 					HashSet<String> fitemSet = (HashSet<String>)fItems.get(i);
 					SiteType fsite = (SiteType)fSite.get(String.valueOf(i));
 					newNode.setSiteType(fsite);
 					newNode.addTableName(tableName);
-					newNode.addCondition(dbNode.getCondition());
+					//newNode.addCondition(dbNode.getCondition());
 					newNode.setVTableItem(fitemSet);
 					TreeNode topNode = (TreeNode)tableTopNode.get(tableName);
 					if (topNode == null) {
@@ -468,12 +469,14 @@ public class QueryProcess implements Serializable {
 						mergeNode.setSiteType(localSite);
 						mergeNode.addTableName(tableName);
 						mergeNode.setSon(topNode, newNode);
-						tableTopNode.put(tableName, newNode);
+						tableTopNode.put(tableName, mergeNode);
 					}
 				}
+				TreeNode topNode = (TreeNode)tableTopNode.get(tableName);
+				topNode.addCondition(dbNode.getCondition());
 			}
 		}
-	
+		
 		//diff_table merge node
 		while (whereOP.size() > 0) {
 			CompareOperation cop = whereOP.get(0);
@@ -538,9 +541,25 @@ public class QueryProcess implements Serializable {
 		TreeNode sonNode = (TreeNode)entry.getValue();
 		TreeNode rootNode = new TreeNode(TreeNode.TRANS_RESULT);
 		rootNode.setSiteType(localSite);
+		rootNode.addTableName(sonNode.getTableNameSet());
 		rootNode.setSon(sonNode, null);
 		
 		rootNode.setSelectItem(selectSet);
+		rootNode.setLocalSite(localSite);
+		ArrayList<HashMap> ans = rootNode.run();
+		
+		/*for (int i=0; i<ans.size(); i++) {
+			HashMap item = (HashMap)ans.get(i);
+			it = item.entrySet().iterator();
+			while (it.hasNext()) {
+				entry = (Map.Entry)it.next();
+				String key = (String)entry.getKey();
+				String value = (String)entry.getValue();
+				System.out.print(key + ":" + value + "       ");
+			}
+			System.out.println();
+		}*/
+		System.out.println(ans.size());
 	}
 	
 	public void updateTableTopNode(HashMap tableTopNode, TreeNode newNode, TreeNode lson, TreeNode rson) {

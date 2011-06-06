@@ -40,4 +40,8 @@ public class CompareOperation implements Serializable {
 	public String getRight() {
 		return right;
 	}
+	
+	public String getOP() {
+		return op;
+	}
 }

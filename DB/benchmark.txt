@@ -1,7 +1,7 @@
-define site site1 127.0.0.1:40001
-define site site2 127.0.0.1:40002
-define site site3 127.0.0.1:40003
-define site site4 127.0.0.1:40004
+define site site1 127.0.0.1:3306
+define site site2 127.0.0.1:3306
+define site site3 127.0.0.1:3306
+define site site4 127.0.0.1:3306
 
 create table Publisher id int key , name string , nation string
 create table Book id int key , title string , authors string , publisher_id int , copies int
@@ -30,12 +30,11 @@ allocate Orders$4 to site4
 allocate Customer$1 to site1
 allocate Customer$2 to site2
 
-
-select Customer.name ,Orders.quantity,Book.title from Customer,Orders,Book where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Customer.rank=1 and Book.copies>5000
-
 select Customer.name ,Orders.quantity,Book.title,Publisher.name from Customer,Orders,Book,Publisher where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Publisher.id=Book.publisher_id and Customer.rank=1 and Book.copies>5000 and Publisher.nation='USA'
 
 select * from Customer
+
+select Publisher.name  from Publisher
 
 select Book.title  from Book  where copies > 5000
 
@@ -45,4 +44,4 @@ select Book.title,Book.copies, Publisher.name, Publisher.nation from Book,Publis
 
 select Customer.name,Orders.quantity from Customer,Orders where Customer.id=Orders.customer_id
 
-
+select Customer.name ,Orders.quantity,Book.title from Customer,Orders,Book where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Customer.rank=1 and Book.copies>5000
