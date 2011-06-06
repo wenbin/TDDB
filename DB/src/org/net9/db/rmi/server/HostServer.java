@@ -19,7 +19,6 @@ import org.net9.db.rmi.HostService;
 import org.net9.db.rmi.HostServiceImpl;
 import org.net9.db.rmi.ServiceConfig;
 
-import com.sun.org.apache.bcel.internal.Constants;
 
 public class HostServer
 {
@@ -50,7 +49,6 @@ public class HostServer
 			new ServiceConfig("site4", "localhost", 3, HostService.SERVICE_NAME)
         };
 		
-		QueryProcess process = new QueryProcess();
 		
 		for (ServiceConfig c : configs) {
 			startService(c);

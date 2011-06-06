@@ -1,7 +1,6 @@
 package org.net9.db.rmi.test;
 
 import junit.framework.*;
-
 import org.net9.db.rmi.*;
 
 public class TestHostProxy extends TestCase {
