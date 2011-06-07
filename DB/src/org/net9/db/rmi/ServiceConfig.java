@@ -5,6 +5,18 @@ public class ServiceConfig
 	private String siteName;
 	
 	private String host;
+	public String getHost() {
+		return host;
+	}
+
+	public int getPort() {
+		return port;
+	}
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
 	private int port;
 	private String serviceName;
 	

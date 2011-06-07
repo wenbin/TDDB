@@ -24,13 +24,14 @@ import org.net9.db.QueryProcess;
 import org.net9.db.rmi.HostService;
 import org.net9.db.rmi.HostServiceImpl;
 import org.net9.db.rmi.ServiceConfig;
-
+import java.rmi.registry.*
+;
 public class HostServerStarter
 {
 	public static void startService(ServiceConfig config)
 	{
 		try {
-			Registry r = LocateRegistry.getRegistry();
+			Registry r = LocateRegistry.getRegistry(config.getHost());
 			HostService service = new HostServiceImpl();
 			r.rebind(config.getLocalBindUrl(), service);
 			System.out.println(config.getRemoteBindUrl() + ": is started!");
@@ -62,13 +63,14 @@ public class HostServerStarter
 		}
 	}
 	
-	public static void main(String[] args) 
+	public static void main(String[] args) throws RemoteException 
 	{
 		if(System.getSecurityManager() == null)
 	    {
 	       System.setSecurityManager(new RMISecurityManager());
 	    }
-
+		Registry r = LocateRegistry.createRegistry(1099);
+		
 		QueryProcess process = new QueryProcess();
 		process.initialDB();
 		HashMap map = process.getServiceInfo();

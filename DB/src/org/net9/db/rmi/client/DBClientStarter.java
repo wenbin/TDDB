@@ -78,6 +78,7 @@ public class DBClientStarter {
 				message(map);
 			} catch (Exception e) {
 				System.out.println("[Input Error]:" + newLine);
+				e.printStackTrace();
 				message(map);
 			}
 		} catch (Exception e) {
