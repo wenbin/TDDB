@@ -82,8 +82,7 @@ public class HostProxyImpl implements HostProxy {
 	@Override
 	public void closeSession(HostSession session) throws Exception {
 		destroyEnvironment(session);
-		// TODO: fix notifyAll
-		
+		// TODO		
 	}
 	
 	private HostService findService(HostSession session, TreeNode node) throws MalformedURLException, RemoteException, NotBoundException
@@ -114,6 +113,7 @@ public class HostProxyImpl implements HostProxy {
 		
 		class WorkerThread extends Thread 
 		{
+			public boolean isSelf;
 			public ArrayList<HashMap> ans;
 			public HostService proxy;
 			public HostSession session;
@@ -175,7 +175,6 @@ public class HostProxyImpl implements HostProxy {
 		if (treeNode == null) {
 			throw new Exception("Not valid query: " + queryStr);
 		}
-		
 		
 		class WorkerThread extends Thread 
 		{

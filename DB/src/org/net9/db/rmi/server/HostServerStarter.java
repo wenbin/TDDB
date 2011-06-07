@@ -1,5 +1,7 @@
 package org.net9.db.rmi.server;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -31,10 +33,33 @@ public class HostServerStarter
 			Registry r = LocateRegistry.getRegistry();
 			HostService service = new HostServiceImpl();
 			r.rebind(config.getLocalBindUrl(), service);
-			System.out.println(config.getRemoteBindUrl() + ": is Ready!");
+			System.out.println(config.getRemoteBindUrl() + ": is started!");
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		} 
+	}
+	
+	public static void stopService(ServiceConfig config) throws NotBoundException
+	{
+		try {
+			Registry r = LocateRegistry.getRegistry();
+			HostService service = new HostServiceImpl();
+			r.unbind(config.getLocalBindUrl());
+			System.out.println(config.getRemoteBindUrl() + ": is stopped!");
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} 
+	}
+	public static void message(HashMap map)
+	{
+		System.out.println("[Server]Please type in DDB server command: (start|stop|exit) <siteName>");
+		System.out.println("  <siteNames>:");
+		Iterator lit = map.entrySet().iterator();
+		while (lit.hasNext()) {
+			Map.Entry lentry = (Map.Entry)lit.next();
+			String siteName = (String)lentry.getKey();
+			System.out.println("    " + siteName);
+		}
 	}
 	
 	public static void main(String[] args) 
@@ -44,16 +69,45 @@ public class HostServerStarter
 	       System.setSecurityManager(new RMISecurityManager());
 	    }
 		
-		
+
 		QueryProcess process = new QueryProcess();
 		process.initialDB();
 		HashMap map = process.getServiceInfo();
-		Iterator lit = map.entrySet().iterator();
-		while (lit.hasNext()) {
-			Map.Entry lentry = (Map.Entry)lit.next();
-			String siteName = (String)lentry.getKey();
-			ServiceConfig config = (ServiceConfig)lentry.getValue();
-			startService(config);
+		message(map);
+		
+		try {
+			BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+			
+			while (true) {
+				String newLine = stdin.readLine();
+				try {
+					if (newLine.equalsIgnoreCase("exit")) { 
+						System.out.println("Exit server");
+						return;
+					}
+
+					String[] strs = newLine.split(" ");
+					String command = strs[0];
+					String siteName = strs[1];
+										
+					if ( map.containsKey(siteName) ) {
+						ServiceConfig config = (ServiceConfig)map.get(siteName);
+						if (command.equalsIgnoreCase("start")) {
+							startService(config);
+							continue;
+						} else if (command.equalsIgnoreCase("stop")) {
+							stopService(config);
+							continue;
+						}
+					}
+					message(map);
+				} catch (Exception e) {
+					System.out.println("[Input Error]:" + newLine);
+					message(map);
+				}
+			}
+		} catch (Exception e) {
+			System.out.println(e);
 		}
 	}
 }
