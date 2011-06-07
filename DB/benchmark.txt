@@ -49,4 +49,6 @@ select Book.title,Book.copies, Publisher.name, Publisher.nation from Book,Publis
 
 select Customer.name,Orders.quantity from Customer,Orders where Customer.id=Orders.customer_id
 
+select Customer.name,Customer.rank,Orders.quantity from Customer,Orders where Customer.id=Orders.customer_id and Customer.rank=1
+
 select Customer.name ,Orders.quantity,Book.title from Customer,Orders,Book where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Customer.rank=1 and Book.copies>5000

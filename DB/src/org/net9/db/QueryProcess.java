@@ -14,6 +14,7 @@ public class QueryProcess implements Serializable {
 	private HashMap fragmentInfo = new HashMap(); // <tableName, fragmentType>
 	private HashMap siteInfo = new HashMap(); // <siteName, siteType>
 	private HashMap serviceInfo = new HashMap(); // <siteName, ServiceConfig>
+	private HashMap topNodeSite = new HashMap(); // <tableName, siteType>
 	
 	public HashMap getServiceInfo() {
 		return serviceInfo;
@@ -140,6 +141,7 @@ public class QueryProcess implements Serializable {
 					String fields[] = items[1].split("\\$");
 					int siteNum = Integer.valueOf(fields[1]) - 1;
 					SiteType siteType = (SiteType)siteInfo.get(items[3]);
+					topNodeSite.put(fields[0], siteType);
 					FragmentType fType = (FragmentType)fragmentInfo.get(fields[0]);
 					fType.setFragmentSite(String.valueOf(siteNum), siteType);
 				}
@@ -469,8 +471,8 @@ public class QueryProcess implements Serializable {
 						tableTopNode.put(tableName, newNode);
 					} else {
 						TreeNode mergeNode = new TreeNode(TreeNode.MERGE_H_FRAG_TABLE);
-						mergeNode.setSiteType(localSite);
 						mergeNode.addTableName(tableName);
+						mergeNode.setSiteType((SiteType)topNodeSite.get(tableName));
 						mergeNode.setSon(topNode, newNode);
 						tableTopNode.put(tableName, mergeNode);
 					}
@@ -491,8 +493,8 @@ public class QueryProcess implements Serializable {
 						tableTopNode.put(tableName, newNode);
 					} else {
 						TreeNode mergeNode = new TreeNode(TreeNode.MERGE_V_FRAG_TABLE);
-						mergeNode.setSiteType(localSite);
 						mergeNode.addTableName(tableName);
+						mergeNode.setSiteType((SiteType)topNodeSite.get(tableName));
 						mergeNode.setSon(topNode, newNode);
 						tableTopNode.put(tableName, mergeNode);
 					}
@@ -507,11 +509,11 @@ public class QueryProcess implements Serializable {
 			CompareOperation cop = whereOP.get(0);
 			whereOP.remove(0);
 			TreeNode newNode = new TreeNode(TreeNode.MERGE_DIFF_TABLE);
-			newNode.setSiteType(localSite);
 			String[] lfield = cop.getLeft().split("\\.");
 			String[] rfield = cop.getRight().split("\\.");
 			TreeNode lsonNode = (TreeNode)tableTopNode.get(lfield[0]);
 			TreeNode rsonNode = (TreeNode)tableTopNode.get(rfield[0]);
+			newNode.setSiteType(lsonNode.getSiteType());
 			newNode.setSon(lsonNode, rsonNode);
 			HashSet<String> tableNameSet = lsonNode.getTableNameSet();
 			newNode.addTableName(tableNameSet);
@@ -547,7 +549,7 @@ public class QueryProcess implements Serializable {
 				TreeNode rsonNode = (TreeNode)entry.getValue();
 				if (lsonNode != rsonNode) {
 					TreeNode newNode = new TreeNode(TreeNode.MERGE_DECARE_TABLE);
-					newNode.setSiteType(localSite);
+					newNode.setSiteType(lsonNode.getSiteType());
 					newNode.setSon(lsonNode, rsonNode);
 					HashSet<String> tableNameSet = lsonNode.getTableNameSet();
 					newNode.addTableName(tableNameSet);
@@ -578,7 +580,6 @@ public class QueryProcess implements Serializable {
 	public ArrayList<HashMap> run(TreeNode rootNode)
 	{
 		ArrayList<HashMap> ans = rootNode.run();
-		
 		/*for (int i=0; i<ans.size(); i++) {
 			HashMap item = (HashMap)ans.get(i);
 			it = item.entrySet().iterator();
@@ -590,8 +591,7 @@ public class QueryProcess implements Serializable {
 			}
 			System.out.println();
 		}*/
-		System.out.println(ans.size());
-		
+		System.out.println("The size of query result set = " + ans.size());
 		return ans;
 	}
 	
@@ -617,11 +617,18 @@ public class QueryProcess implements Serializable {
 			BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
 			String newLine = stdin.readLine();
 			while (!newLine.equals("exit")) {
+				long startTime = System.currentTimeMillis();
 				
 				TreeNode rootNode = queryParse(newLine);
 				if (rootNode != null) {
+					rootNode.printTree("");
+					System.out.println();
 					run(rootNode);
 				}
+				
+				long endTime = System.currentTimeMillis();
+				System.out.println("Time used = " + (double)(endTime - startTime) / (double)1000 + " s ");
+				
 				newLine = stdin.readLine();
 			}
 		} catch (Exception e) {
