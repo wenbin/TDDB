@@ -275,44 +275,9 @@ public class TreeNode implements Serializable {
 				}
 				break;
 			case MERGE_DIFF_TABLE :
-				/*if (condition.size() == 1) {
-					CompareOperation cop = (CompareOperation)condition.get(0);
-					String leftItem = cop.getLeft(), rightItem = cop.getRight();
-					qsort(lans, 0, lans.size() - 1, leftItem);
-					qsort(rans, 0, rans.size() - 1, rightItem);
-					ans = new ArrayList<HashMap>();
-					int lindex = 0, rindex = 0;
-					while (lindex < lans.size() && rindex < rans.size()) {
-						String lvalue = (String)((HashMap)lans.get(lindex)).get(leftItem);
-						String rvalue = (String)((HashMap)rans.get(rindex)).get(rightItem);
-						int cmp = lvalue.compareTo(rvalue);
-						if (cmp == 0) {
-							HashMap newItem = new HashMap();
-							HashMap lmap = (HashMap)lans.get(lindex);
-							Iterator lit = lmap.entrySet().iterator();
-							while (lit.hasNext()) {
-								Map.Entry lentry = (Map.Entry)lit.next();
-								String item = (String)lentry.getKey();
-								String value = (String)lentry.getValue();
-								if (selectItem.contains(item)) newItem.put(item, value);
-							}
-							HashMap rmap = (HashMap)rans.get(rindex);
-							Iterator rit = rmap.entrySet().iterator();
-							while (rit.hasNext()) {
-								Map.Entry rentry = (Map.Entry)rit.next();
-								String item = (String)rentry.getKey();
-								String value = (String)rentry.getValue();
-								if (selectItem.contains(item)) newItem.put(item, value);
-							}	
-							ans.add(newItem);
-							lindex++; rindex++;
-						} else 
-						if (cmp < 0) lindex++; else rindex++;
-					}
-				}*/
 				ans = new ArrayList<HashMap>();
 				if (rans.size() > 0) {
-					HashMap itemMap = new HashMap(); // itemName, valueMap<value, HashSet>
+					HashMap itemMap = new HashMap(); // itemName, valueMap<value, ArrayList>
 					HashMap rmap = (HashMap)rans.get(0);
 					Iterator rit = rmap.entrySet().iterator();
 					while (rit.hasNext()) {
@@ -321,7 +286,7 @@ public class TreeNode implements Serializable {
 						HashMap valueMap = new HashMap();
 						itemMap.put(item, valueMap);
 					}
-					
+					HashMap temp = null;
 					for (int i=0; i<rans.size(); i++) {
 						rmap = (HashMap)rans.get(i);
 						rit = rmap.entrySet().iterator();
@@ -330,35 +295,44 @@ public class TreeNode implements Serializable {
 							String item = (String)rentry.getKey();
 							String value = (String)rentry.getValue();
 							HashMap valueMap = (HashMap)itemMap.get(item);
-							HashSet itemSet = (HashSet)valueMap.get(value);
-							if (itemSet == null) {
-								itemSet = new HashSet();
-								itemSet.add(rmap);
-								valueMap.put(value, itemSet);
+							ArrayList itemList = (ArrayList)valueMap.get(value);
+							if (itemList == null) {
+								itemList = new ArrayList();
+								itemList.add(rmap);
+								valueMap.put(value, itemList);
+								temp = valueMap;
 							} else {
-								itemSet.add(rmap);
+								itemList.add(rmap);
 							}
 						}
 					}
 				
+					int tot = 0;
+					rit = temp.entrySet().iterator();
+					while (rit.hasNext()) {
+						Map.Entry rentry = (Map.Entry)rit.next();
+						String item = (String)rentry.getKey();
+						ArrayList value = (ArrayList)rentry.getValue();
+						tot += value.size();
+					}
+					
 					for (int i=0; i<lans.size(); i++) {
 						HashMap lmap = lans.get(i);
 						CompareOperation cop = (CompareOperation)condition.get(0);
 						String leftItem = cop.getLeft(), rightItem = cop.getRight();
 						String value = (String)lmap.get(leftItem);
 						HashMap valueMap = (HashMap)itemMap.get(rightItem);
-						HashSet itemSet = (HashSet)valueMap.get(value);
-						Iterator it = itemSet.iterator();
-						while (it.hasNext()) {
+						ArrayList itemList = (ArrayList)valueMap.get(value);
+						if (itemList == null) continue;
+						for (int listIndex=0; listIndex<itemList.size(); listIndex++) {
 							boolean ok = true;
-							rmap = (HashMap)it.next();
+							rmap = (HashMap)itemList.get(listIndex);
 							for (int j=1; j<condition.size(); j++) {
 								cop = (CompareOperation)condition.get(j);
 								leftItem = cop.getLeft(); rightItem = cop.getRight();
-								value = (String)lmap.get(leftItem);
-								valueMap = (HashMap)itemMap.get(rightItem);
-								itemSet = (HashSet)valueMap.get(value);
-								if (!itemSet.contains(rmap)) {
+								String lvalue = (String)lmap.get(leftItem);
+								String rvalue = (String)rmap.get(rightItem);
+								if (!lvalue.equals(rvalue)) {
 									ok = false; break;
 								}
 							}
@@ -407,6 +381,7 @@ public class TreeNode implements Serializable {
 						}
 						ans.add(newItem);
 					}
+				break;
 			case TRANS_RESULT :
 				ans = lans; 
 				break;
@@ -478,7 +453,7 @@ public class TreeNode implements Serializable {
 		return query;
 	}
 	
-	private int compare(HashMap x, HashMap y, String itemName) {
+	/*private int compare(HashMap x, HashMap y, String itemName) {
 		String xValue = (String)x.get(itemName);
 		String yValue = (String)y.get(itemName);
 		return xValue.compareTo(yValue);
@@ -499,5 +474,61 @@ public class TreeNode implements Serializable {
 			}
 		} while (i <= j);
 		qsort(data, left, j, itemName); qsort(data, i, right, itemName);
+	}*/
+	
+	public void printTree(String prefix) {
+		final int width = 10;
+		System.out.print("@" + siteType.getSiteName() + " : ");
+		Iterator it = this.tableName.iterator();
+		String tableName = (String)it.next();
+		switch (this.kind) {
+			case READ_H_DATA :
+				System.out.print("Read_H_FRAG_TABLE");
+				System.out.print("   from   " + tableName);
+				break;
+			case READ_V_DATA :
+				System.out.print("Read_V_FRAG_TABLE");
+				System.out.print("   from   " + tableName);
+				break;
+			case MERGE_H_FRAG_TABLE :
+				System.out.print("MERGE_H_SAME_FRAG_TABLE");
+				break;
+			case MERGE_V_FRAG_TABLE :
+				System.out.print("MERGE_V_SAME_FRAG_TABLE");
+				break;
+			case MERGE_DIFF_TABLE :
+				System.out.print("MERGE_DIFF_TABLE");
+				break;
+			case MERGE_DECARE_TABLE :
+				System.out.print("DECARE_MERGE_DIFF_TABLE");
+				break;
+			case TRANS_RESULT :
+				System.out.print("TRANS_ANS_TO_LOCAL");
+				break;
+			default :
+				break;
+		}
+		System.out.println();
+		if (lson != null) {
+			String newPrefix = prefix + "|";
+			System.out.println(newPrefix);
+			System.out.print(newPrefix);
+			for (int i=0; i<width; i++)
+				System.out.print("_");
+			if (rson == null) newPrefix = prefix + " ";
+			for (int i=0; i<width; i++)
+				newPrefix = newPrefix + " ";
+			this.lson.printTree(newPrefix);
+		}
+		if (rson != null) {
+			System.out.println(prefix + "|");
+			System.out.print(prefix + "|");
+			for (int i=0; i<width; i++)
+				System.out.print("_");
+			String newPrefix = prefix + " ";
+			for (int i=0; i<width; i++)
+				newPrefix = newPrefix + " ";
+			this.rson.printTree(newPrefix);
+		}
 	}
 }
