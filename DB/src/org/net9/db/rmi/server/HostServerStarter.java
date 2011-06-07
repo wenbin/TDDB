@@ -12,14 +12,16 @@ import java.rmi.RemoteException;
 import java.rmi.server.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.imageio.spi.RegisterableService;
 
+import org.net9.db.QueryProcess;
 import org.net9.db.rmi.HostService;
 import org.net9.db.rmi.HostServiceImpl;
 import org.net9.db.rmi.ServiceConfig;
-
-import com.sun.org.apache.bcel.internal.Constants;
 
 public class HostServerStarter
 {
@@ -42,16 +44,16 @@ public class HostServerStarter
 	       System.setSecurityManager(new RMISecurityManager());
 	    }
 		
-		ServiceConfig[] configs = new ServiceConfig[]
-        {
-			new ServiceConfig("site1", "localhost", 0, HostService.SERVICE_NAME),
-			new ServiceConfig("site2", "localhost", 1, HostService.SERVICE_NAME),
-			new ServiceConfig("site3", "localhost", 2, HostService.SERVICE_NAME),
-			new ServiceConfig("site4", "localhost", 3, HostService.SERVICE_NAME)
-        };
 		
-		for (ServiceConfig c : configs) {
-			startService(c);
+		QueryProcess process = new QueryProcess();
+		process.initialDB();
+		HashMap map = process.getServiceInfo();
+		Iterator lit = map.entrySet().iterator();
+		while (lit.hasNext()) {
+			Map.Entry lentry = (Map.Entry)lit.next();
+			String siteName = (String)lentry.getKey();
+			ServiceConfig config = (ServiceConfig)lentry.getValue();
+			startService(config);
 		}
 	}
 }

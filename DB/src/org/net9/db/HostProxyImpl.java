@@ -1,4 +1,4 @@
-
+package org.net9.db;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -83,6 +83,7 @@ public class HostProxyImpl implements HostProxy {
 	public void closeSession(HostSession session) throws Exception {
 		destroyEnvironment(session);
 		// TODO: fix notifyAll
+		
 	}
 	
 	private HostService findService(HostSession session, TreeNode node) throws MalformedURLException, RemoteException, NotBoundException
@@ -169,7 +170,8 @@ public class HostProxyImpl implements HostProxy {
 			throws Exception {
 		Environment en = findOrCreateEnvironment(session);
 		
-		final TreeNode treeNode = queryProcess.queryParse(queryStr);
+		System.out.println(queryStr);
+		TreeNode treeNode = queryProcess.queryParse(queryStr);
 		if (treeNode == null) {
 			throw new Exception("Not valid query: " + queryStr);
 		}
@@ -178,6 +180,7 @@ public class HostProxyImpl implements HostProxy {
 		class WorkerThread extends Thread 
 		{
 			public ArrayList<HashMap> result = null;
+			public TreeNode treeNode;
 			public void run()
 			{
 				result = treeNode.run();
@@ -185,13 +188,14 @@ public class HostProxyImpl implements HostProxy {
 		}
 		
 		WorkerThread thread = new WorkerThread();
+		thread.treeNode = treeNode;
 		en.addThread(thread);
 		thread.start();
 		thread.join();
 		
 		ArrayList<HashMap> result = thread.result;
 		
-		return String.format("[%d]Query: %s", session.sessionId, queryStr);
+		return String.format("[%d]Query: %s [Count:%d]", session.sessionId, queryStr, result.size());
 	}
 	
 	public void main(String[] argv) throws Exception

@@ -1,3 +1,4 @@
+package org.net9.db;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;

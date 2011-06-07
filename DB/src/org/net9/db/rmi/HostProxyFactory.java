@@ -16,8 +16,10 @@ public class HostProxyFactory  {
 	}
 	
 	static class HostProxyHolder {
-		Class klass;
+		static org.net9.db.HostProxyImpl INSTANCE = new org.net9.db.HostProxyImpl();
 		
-		static HostProxyImpl INSTANCE = new HostProxyImpl();
+		static {
+			INSTANCE.initializeConfig();
+		}
 	}
 }
