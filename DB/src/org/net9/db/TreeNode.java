@@ -476,59 +476,61 @@ public class TreeNode implements Serializable {
 		qsort(data, left, j, itemName); qsort(data, i, right, itemName);
 	}*/
 	
-	public void printTree(String prefix) {
+	public String printTree(String prefix) {
+		String ans = "";
 		final int width = 10;
-		System.out.print("@" + siteType.getSiteName() + " : ");
+		ans = ans + "@" + siteType.getSiteName() + " : ";
 		Iterator it = this.tableName.iterator();
 		String tableName = (String)it.next();
 		switch (this.kind) {
 			case READ_H_DATA :
-				System.out.print("Read_H_FRAG_TABLE");
-				System.out.print("   from   " + tableName);
+				ans = ans + "Read_H_FRAG_TABLE";
+				ans = ans + "   from   " + tableName;
 				break;
 			case READ_V_DATA :
-				System.out.print("Read_V_FRAG_TABLE");
-				System.out.print("   from   " + tableName);
+				ans = ans + "Read_V_FRAG_TABLE";
+				ans = ans + "   from   " + tableName;
 				break;
 			case MERGE_H_FRAG_TABLE :
-				System.out.print("MERGE_H_SAME_FRAG_TABLE");
+				ans = ans + "MERGE_H_SAME_FRAG_TABLE";
 				break;
 			case MERGE_V_FRAG_TABLE :
-				System.out.print("MERGE_V_SAME_FRAG_TABLE");
+				ans = ans + "MERGE_V_SAME_FRAG_TABLE";
 				break;
 			case MERGE_DIFF_TABLE :
-				System.out.print("MERGE_DIFF_TABLE");
+				ans = ans + "MERGE_DIFF_TABLE";
 				break;
 			case MERGE_DECARE_TABLE :
-				System.out.print("DECARE_MERGE_DIFF_TABLE");
+				ans = ans + "DECARE_MERGE_DIFF_TABLE";
 				break;
 			case TRANS_RESULT :
-				System.out.print("TRANS_ANS_TO_LOCAL");
+				ans = ans + "TRANS_ANS_TO_LOCAL";
 				break;
 			default :
 				break;
 		}
-		System.out.println();
+		ans = ans + "\n";
 		if (lson != null) {
 			String newPrefix = prefix + "|";
-			System.out.println(newPrefix);
-			System.out.print(newPrefix);
+			ans = ans + newPrefix + "\n";
+			ans = ans + newPrefix;
 			for (int i=0; i<width; i++)
-				System.out.print("_");
+				ans = ans + "_";
 			if (rson == null) newPrefix = prefix + " ";
 			for (int i=0; i<width; i++)
 				newPrefix = newPrefix + " ";
-			this.lson.printTree(newPrefix);
+			ans = ans + this.lson.printTree(newPrefix);
 		}
 		if (rson != null) {
-			System.out.println(prefix + "|");
-			System.out.print(prefix + "|");
+			ans = ans + prefix + "|" + "\n";
+			ans = ans + prefix + "|";
 			for (int i=0; i<width; i++)
-				System.out.print("_");
+				ans = ans + "_";
 			String newPrefix = prefix + " ";
 			for (int i=0; i<width; i++)
 				newPrefix = newPrefix + " ";
-			this.rson.printTree(newPrefix);
+			ans = ans + this.rson.printTree(newPrefix);
 		}
+		return ans;
 	}
 }

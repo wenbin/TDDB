@@ -621,8 +621,8 @@ public class QueryProcess implements Serializable {
 				
 				TreeNode rootNode = queryParse(newLine);
 				if (rootNode != null) {
-					rootNode.printTree("");
-					System.out.println();
+					String printTree = rootNode.printTree("");
+					System.out.println(printTree);
 					run(rootNode);
 				}
 				
