@@ -68,7 +68,6 @@ public class HostServerStarter
 	    {
 	       System.setSecurityManager(new RMISecurityManager());
 	    }
-		
 
 		QueryProcess process = new QueryProcess();
 		process.initialDB();
@@ -103,6 +102,7 @@ public class HostServerStarter
 					message(map);
 				} catch (Exception e) {
 					System.out.println("[Input Error]:" + newLine);
+					e.printStackTrace();
 					message(map);
 				}
 			}

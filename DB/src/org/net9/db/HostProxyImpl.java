@@ -113,7 +113,7 @@ public class HostProxyImpl implements HostProxy {
 		
 		class WorkerThread extends Thread 
 		{
-			public boolean isSelf;
+			public boolean isSelf; //: TODO
 			public ArrayList<HashMap> ans;
 			public HostService proxy;
 			public HostSession session;
@@ -189,12 +189,19 @@ public class HostProxyImpl implements HostProxy {
 		WorkerThread thread = new WorkerThread();
 		thread.treeNode = treeNode;
 		en.addThread(thread);
+		
+		long startTime = System.currentTimeMillis();
 		thread.start();
 		thread.join();
-		
+		long endTime = System.currentTimeMillis();
+
 		ArrayList<HashMap> result = thread.result;
 		
-		return String.format("[%d]Query: %s [Count:%d]", session.sessionId, queryStr, result.size());
+		return String.format("[%d]Query: %s [Count:%d][Time:%f]", 
+								session.sessionId, 
+								queryStr, 
+								result.size(), 
+								(double)(endTime - startTime) / (double)1000);
 	}
 	
 	public void main(String[] argv) throws Exception
