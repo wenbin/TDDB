@@ -275,7 +275,7 @@ public class TreeNode implements Serializable {
 				}
 				break;
 			case MERGE_DIFF_TABLE :
-				if (condition.size() == 1) {
+				/*if (condition.size() == 1) {
 					CompareOperation cop = (CompareOperation)condition.get(0);
 					String leftItem = cop.getLeft(), rightItem = cop.getRight();
 					qsort(lans, 0, lans.size() - 1, leftItem);
@@ -309,8 +309,79 @@ public class TreeNode implements Serializable {
 						} else 
 						if (cmp < 0) lindex++; else rindex++;
 					}
-				} else {
-					// to do
+				}*/
+				ans = new ArrayList<HashMap>();
+				if (rans.size() > 0) {
+					HashMap itemMap = new HashMap(); // itemName, valueMap<value, HashSet>
+					HashMap rmap = (HashMap)rans.get(0);
+					Iterator rit = rmap.entrySet().iterator();
+					while (rit.hasNext()) {
+						Map.Entry rentry = (Map.Entry)rit.next();
+						String item = (String)rentry.getKey();
+						HashMap valueMap = new HashMap();
+						itemMap.put(item, valueMap);
+					}
+					
+					for (int i=0; i<rans.size(); i++) {
+						rmap = (HashMap)rans.get(i);
+						rit = rmap.entrySet().iterator();
+						while (rit.hasNext()) {
+							Map.Entry rentry = (Map.Entry)rit.next();
+							String item = (String)rentry.getKey();
+							String value = (String)rentry.getValue();
+							HashMap valueMap = (HashMap)itemMap.get(item);
+							HashSet itemSet = (HashSet)valueMap.get(value);
+							if (itemSet == null) {
+								itemSet = new HashSet();
+								itemSet.add(rmap);
+								valueMap.put(value, itemSet);
+							} else {
+								itemSet.add(rmap);
+							}
+						}
+					}
+				
+					for (int i=0; i<lans.size(); i++) {
+						HashMap lmap = lans.get(i);
+						CompareOperation cop = (CompareOperation)condition.get(0);
+						String leftItem = cop.getLeft(), rightItem = cop.getRight();
+						String value = (String)lmap.get(leftItem);
+						HashMap valueMap = (HashMap)itemMap.get(rightItem);
+						HashSet itemSet = (HashSet)valueMap.get(value);
+						Iterator it = itemSet.iterator();
+						while (it.hasNext()) {
+							boolean ok = true;
+							rmap = (HashMap)it.next();
+							for (int j=1; j<condition.size(); j++) {
+								cop = (CompareOperation)condition.get(j);
+								leftItem = cop.getLeft(); rightItem = cop.getRight();
+								value = (String)lmap.get(leftItem);
+								valueMap = (HashMap)itemMap.get(rightItem);
+								itemSet = (HashSet)valueMap.get(value);
+								if (!itemSet.contains(rmap)) {
+									ok = false; break;
+								}
+							}
+							if (ok) {
+								HashMap newItem = new HashMap();
+								Iterator lit = lmap.entrySet().iterator();
+								while (lit.hasNext()) {
+									Map.Entry lentry = (Map.Entry)lit.next();
+									String item = (String)lentry.getKey();
+									value = (String)lentry.getValue();
+									if (selectItem.contains(item)) newItem.put(item, value);
+								}
+								rit = rmap.entrySet().iterator();
+								while (rit.hasNext()) {
+									Map.Entry rentry = (Map.Entry)rit.next();
+									String item = (String)rentry.getKey();
+									value = (String)rentry.getValue();
+									if (selectItem.contains(item)) newItem.put(item, value);
+								}	
+								ans.add(newItem);
+							}
+						}
+					}
 				}
 				break;
 			case MERGE_DECARE_TABLE :
