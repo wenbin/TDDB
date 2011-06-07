@@ -1,0 +1,21 @@
+
+start site1
+start site2
+start site3
+start site4
+
+
+stop site1
+stop site2
+stop site3
+stop site4
+
+
+
+connect site1
+
+connect site2
+
+connect site3
+
+connect site4

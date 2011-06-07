@@ -1,0 +1,1 @@
+java  -Djava.security.policy="security.policy" -Djava.rmi.server.codebase="file:DBServer.jar file:mysql-connector-java-5.1.16-bin.jar" -jar "DBServer.jar"

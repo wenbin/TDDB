@@ -1,0 +1,1 @@
+start jre6\bin\rmiregistry.exe
