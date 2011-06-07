@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
@@ -82,7 +83,7 @@ public class HostProxyImpl implements HostProxy {
 	@Override
 	public void closeSession(HostSession session) throws Exception {
 		destroyEnvironment(session);
-		// TODO		
+		// TODO
 	}
 	
 	private HostService findService(HostSession session, TreeNode node) throws MalformedURLException, RemoteException, NotBoundException
@@ -95,6 +96,9 @@ public class HostProxyImpl implements HostProxy {
 		ServiceConfig serviceConfig = (ServiceConfig)serviceInfo.get(siteName);
 		// TODO:
 		// DBClientManager getHostService
+		System.err.println(serviceConfig.getRemoteBindUrl() + " : ");
+		System.err.println(node.printTree(""));
+		
 		HostService service = DBClientManager.getHostService(serviceConfig);
 		return service;
 	}
@@ -134,43 +138,50 @@ public class HostProxyImpl implements HostProxy {
 		WorkerThread rThread = new WorkerThread();
 		if (lson != null) {
 			HostService leftService = findService(session, lson); //: TODO
+			
 			lThread.proxy = leftService;
 			lThread.session = session;
 			lThread.son = lson;
-			lThread.run();
+			en.addThread(lThread);
+			lThread.start();
 		}
 		if (rson != null) {
-			HostService rightService = findService(session, lson); //: TODO
+			HostService rightService = findService(session, rson); //: TODO
 			rThread.proxy = rightService;
 			rThread.session = session;
 			rThread.son = rson;
-			rThread.run();
+			en.addThread(rThread);
+			rThread.start();
 		}
 		
-		en.addThread(lThread);
-		en.addThread(rThread);
-		lThread.start();
-		rThread.start();
 		lThread.join();
 		rThread.join();
+		
 		if (lThread.exception != null || rThread.exception != null)
 		{
-			// TODO: Error Remote
+			System.err.println("lThread.exception:" + lThread.exception);
+			System.err.println("rThread.exception:" + rThread.exception);
 		}
 		
 		lans = lThread.ans;
-		rans = lThread.ans;
+		rans = rThread.ans;
+		
+		System.err.println(treeNode.printTree(""));
+		System.err.println("Left: " + ((lans != null) ? lans.size() : "null"));
+		System.err.println("Right: " + ((rans != null) ? rans.size() : "null") );
+		
 		ArrayList<HashMap> ans = treeNode.runAns(lans, rans);
 		return ans;
 	}
-	
 	
 	@Override
 	public String query(HostSession session, String queryStr)
 			throws Exception {
 		Environment en = findOrCreateEnvironment(session);
 		
-		System.out.println(queryStr);
+		System.err.println(queryStr);
+		
+		
 		TreeNode treeNode = queryProcess.queryParse(queryStr);
 		if (treeNode == null) {
 			throw new Exception("Not valid query: " + queryStr);
@@ -178,16 +189,29 @@ public class HostProxyImpl implements HostProxy {
 		
 		class WorkerThread extends Thread 
 		{
-			public ArrayList<HashMap> result = null;
-			public TreeNode treeNode;
+			public ArrayList<HashMap> ans;
+			public TreeNode son;
+			public HostSession session;
+			public HostService proxy;
+			public Exception exception;
+			
 			public void run()
 			{
-				result = treeNode.run();
+				try {
+					ans = proxy.runTreeNode(session, son);
+				} catch (Exception e) {
+					this.exception = e;
+					e.printStackTrace();
+				}
 			}
 		}
 		
 		WorkerThread thread = new WorkerThread();
-		thread.treeNode = treeNode;
+		HostService mergeService = findService(session, treeNode); //: TODO
+		thread.proxy = mergeService;
+		thread.session = session;
+		thread.son = treeNode;
+		
 		en.addThread(thread);
 		
 		long startTime = System.currentTimeMillis();
@@ -195,13 +219,37 @@ public class HostProxyImpl implements HostProxy {
 		thread.join();
 		long endTime = System.currentTimeMillis();
 
-		ArrayList<HashMap> result = thread.result;
+		if (thread.exception != null)
+		{
+			System.err.println("thread.exception:" + thread.exception);
+		}
+		
+		ArrayList<HashMap> ans = thread.ans;
+		String treeStr = treeNode.printTree("");
+		//dumpAns(ans);
 		
 		return String.format("[%d]Query: %s [Count:%d][Time:%f]", 
 								session.sessionId, 
 								queryStr, 
-								result.size(), 
-								(double)(endTime - startTime) / (double)1000);
+								ans.size(), 
+								(double)(endTime - startTime) / (double)1000)
+								+ "\n"
+								+ treeStr;
+	}
+	
+	private void dumpAns(ArrayList<HashMap> ans)
+	{
+		for (int i=0; i<ans.size(); i++) {
+			HashMap item = (HashMap)ans.get(i);
+			Iterator it = item.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry entry = (Map.Entry)it.next();
+				String key = (String)entry.getKey();
+				String value = (String)entry.getValue();
+				System.err.print(key + ":" + value + "       ");
+			}
+			System.err.println();
+		}
 	}
 	
 	public void main(String[] argv) throws Exception
@@ -226,4 +274,6 @@ public class HostProxyImpl implements HostProxy {
 			System.out.println(e);
 		}
 	}
+	
+	
 }

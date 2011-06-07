@@ -458,7 +458,7 @@ public class QueryProcess implements Serializable {
 			if (ftype.getKind() == 'h') {
 				ArrayList fItems = ftype.getFragmentItems();
 				HashMap fSite = ftype.getFragmentSite();
-				for (int i=0; i<fItems.size(); i++) {
+				for (int i=fItems.size()-1; i>=0; i--) {
 					TreeNode newNode = new TreeNode(TreeNode.READ_H_DATA);
 					HashSet opSet = (HashSet)fItems.get(i);
 					SiteType fsite = (SiteType)fSite.get(String.valueOf(i));
@@ -480,7 +480,7 @@ public class QueryProcess implements Serializable {
 			} else {
 				ArrayList fItems = ftype.getFragmentItems();
 				HashMap fSite = ftype.getFragmentSite();
-				for (int i=0; i<fItems.size(); i++) {
+				for (int i=fItems.size() - 1; i>=0; i--) {
 					TreeNode newNode = new TreeNode(TreeNode.READ_V_DATA);		
 					HashSet<String> fitemSet = (HashSet<String>)fItems.get(i);
 					SiteType fsite = (SiteType)fSite.get(String.valueOf(i));

@@ -69,7 +69,12 @@ public class DBClientStarter {
 						System.out.println("Connected to: " + siteName);
 						newLine = stdin.readLine();
 						while (!newLine.equals("exit")) {
-							testQuery(service, newLine);
+							try {
+								testQuery(service, newLine);
+							} catch (RemoteException re) {
+								System.out.println("[Query Error]:" + newLine);
+								re.printStackTrace();
+							}
 							newLine = stdin.readLine();
 						}
 						return;

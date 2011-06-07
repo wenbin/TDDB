@@ -63,13 +63,17 @@ public class HostServerStarter
 		}
 	}
 	
-	public static void main(String[] args) throws RemoteException 
+	public static void main(String[] args)
 	{
 		if(System.getSecurityManager() == null)
 	    {
 	       System.setSecurityManager(new RMISecurityManager());
 	    }
-		Registry r = LocateRegistry.createRegistry(1099);
+		try {
+			Registry r = LocateRegistry.createRegistry(1099);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		QueryProcess process = new QueryProcess();
 		process.initialDB();
