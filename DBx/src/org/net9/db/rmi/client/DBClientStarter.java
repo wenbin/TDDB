@@ -66,7 +66,8 @@ public class DBClientStarter {
 					ServiceConfig config = (ServiceConfig)map.get(siteName);
 					if (command.equalsIgnoreCase("connect")) {
 						HostService service = DBClientManager.getHostService(config);
-						System.out.println("Connected to: " + siteName);
+						System.out.println("Connected to: " + siteName + "  |" + service);
+						
 						newLine = stdin.readLine();
 						while (!newLine.equals("exit")) {
 							try {

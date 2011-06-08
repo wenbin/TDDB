@@ -23,12 +23,12 @@ public class DBClientManager {
 	public synchronized static HostService getHostService(ServiceConfig config) throws MalformedURLException, RemoteException, NotBoundException
 	{
 		Remote r = null;
-		if (dict.containsKey(config)) {
-			r = dict.get(config);
-		} else {
-			r = Naming.lookup(config.getRemoteBindUrl());
-			dict.put(config, r);
-		}
+		//if (dict.containsKey(config)) {
+		//	r = dict.get(config);
+		//} else {
+		r = Naming.lookup(config.getRemoteBindUrl());
+		//	dict.put(config, r);
+		//}
 		HostService service = (HostService)r;
 		return service;
 	}
