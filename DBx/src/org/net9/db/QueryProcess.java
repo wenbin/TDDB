@@ -19,7 +19,11 @@ public class QueryProcess implements Serializable {
 	public HashMap getServiceInfo() {
 		return serviceInfo;
 	}
-
+	
+	public SiteType getSiteType(String siteName) {
+		return (SiteType)siteInfo.get(siteName);
+	}
+	
 	private String deleteMoreBlank(String st) {
 		String[] items = st.split(" ");
 		String temp = "";

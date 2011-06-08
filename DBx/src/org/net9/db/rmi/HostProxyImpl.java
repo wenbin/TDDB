@@ -154,6 +154,7 @@ public class HostProxyImpl implements HostProxy {
 	{
 		Environment en = findOrCreateEnvironment(session);
 		
+		System.out.println("RunTreeNode: On " + siteName);
 		final TreeNode treeNode = (TreeNode)node;
 		
 		ArrayList<HashMap> lans = null;
@@ -192,6 +193,8 @@ public class HostProxyImpl implements HostProxy {
 		System.err.println("Left: " + ((lans != null) ? lans.size() : "null"));
 		System.err.println("Right: " + ((rans != null) ? rans.size() : "null") );
 		
+		SiteType localSite = queryProcess.getSiteType(this.getSiteName());
+		treeNode.setLocalSite(localSite);
 		ArrayList<HashMap> ans = treeNode.runAns(lans, rans);
 		return ans;
 	}

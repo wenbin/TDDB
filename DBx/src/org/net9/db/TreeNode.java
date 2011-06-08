@@ -17,10 +17,9 @@ public class TreeNode implements Serializable {
 	public static final int MERGE_DECARE_TABLE = 5;
 	public static final int TRANS_RESULT = 6;
 	
-	private static SiteType localSite = null;
+	private SiteType localSite = null;
 	private SiteType siteType = null;
 	
-
 	private TreeNode lson = null;
 	private TreeNode rson = null;
 	private int kind = -1; //opeartion kind
@@ -147,7 +146,7 @@ public class TreeNode implements Serializable {
 					Class.forName("org.gjt.mm.mysql.Driver");  
 					String url = "jdbc:mysql://";
 					url = url + siteType.getAddress();
-					url = url + "/ddb" + siteType.getSiteName().charAt(4);
+					url = url + "/ddb" + localSite.getSiteName().charAt(4);
 					String query = getHQuery();
 					if (query != null) {
 						String username = "root";
@@ -181,7 +180,7 @@ public class TreeNode implements Serializable {
 					Class.forName("org.gjt.mm.mysql.Driver");  
 					String url = "jdbc:mysql://";
 					url = url + siteType.getAddress();
-					url = url + "/ddb" + siteType.getSiteName().charAt(4);
+					url = url + "/ddb" + localSite.getSiteName().charAt(4);
 					String query = getVQuery();
 					
 					if (query != null) {
