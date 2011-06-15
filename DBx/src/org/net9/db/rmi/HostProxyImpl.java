@@ -96,8 +96,19 @@ public class HostProxyImpl implements HostProxy {
 	
 	@Override
 	public void closeSession(HostSession session) throws Exception {
-		destroyEnvironment(session);
-		// TODO
+		if (containsEnvironment(session)) {
+			destroyEnvironment(session);
+			
+			// Notify all to close:
+			/*HashMap map = queryProcess.getServiceInfo();
+			Iterator lit = map.entrySet().iterator();
+			while (lit.hasNext()) {
+				Map.Entry lentry = (Map.Entry)lit.next();
+				String siteName = (String)lentry.getKey();
+				HostService service = (HostService)lentry.getValue();
+				service.closeSession(session);
+			}*/
+		}
 	}
 	
 	private HostService findService(HostSession session, TreeNode node) throws MalformedURLException, RemoteException, NotBoundException

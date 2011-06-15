@@ -145,7 +145,7 @@ public class TreeNode implements Serializable {
 				try {
 					Class.forName("org.gjt.mm.mysql.Driver");  
 					String url = "jdbc:mysql://";
-					url = url + siteType.getAddress();
+					url = url + localSite.getAddress();
 					url = url + "/ddb" + localSite.getSiteName().charAt(4);
 					String query = getHQuery();
 					if (query != null) {
@@ -179,7 +179,7 @@ public class TreeNode implements Serializable {
 				try {
 					Class.forName("org.gjt.mm.mysql.Driver");  
 					String url = "jdbc:mysql://";
-					url = url + siteType.getAddress();
+					url = url + localSite.getAddress();
 					url = url + "/ddb" + localSite.getSiteName().charAt(4);
 					String query = getVQuery();
 					
